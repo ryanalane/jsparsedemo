@@ -1,0 +1,135 @@
+<!doctype html>
+<head>
+  <meta charset="utf-8">
+
+  <title>My Parse App</title>
+  <meta name="description" content="My Parse App">
+  <meta name="viewport" content="width=device-width">
+  <link rel="stylesheet" href="css/reset.css">
+  <link rel="stylesheet" href="css/styles.css">
+  <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+  <script type="text/javascript" src="http://www.parsecdn.com/js/parse-1.2.16.min.js"></script>
+</head>
+
+<body>
+  
+  <div id="main">
+    <h1>Parse Javascript Object Save/Retrieve Demo</h1>
+
+    <h2>The Demo</h2>
+    <form>
+      <p>Let's create a new SavedGame JS object, storing only an amount of money and the time the game was saved</p>
+      <p>
+        <label>Current $:</label>
+        <input id="current-amount-input" value="" type="text" placeholder="(enter an amount)">
+      </p>
+      <p>
+        <label>Current time:</label>
+        <input id="current-time-input" type="text" disabled>
+      </p>
+      <p>
+        <input id="save-button" type="button" value="Save Object">
+      </p>
+    </form>
+
+    <div id="saveError" style="display:none" class="error">
+      Oops, something went wrong when saving.
+    </div>
+
+    <div id="saveSuccess" style="display:none" class="success">
+      Cool! Object saved.
+    </div>
+
+    <form>
+      <p>Now let's retrieve the object we just made (returns the last object saved).</p>
+      <p>
+        <input id="retrieve-button" type="button" value="Retrieve Object">
+      </p>
+    </form>
+
+    <div id="retrieveError" style="display:none" class="error">
+      Oops, something went wrong when retrieving.
+    </div>
+
+    <div id="retrieveSuccess" style="display:none" class="success">
+      <p>$<span id="retrievedAmount"></span></p>
+      <p>Time at save: <span id="retrievedTime"></span></p>
+    </div>
+
+
+    <h2>Docs to peruse</h2>
+    <ul>
+      <li><a href="https://www.parse.com/docs/js_guide">Parse JavaScript Guide</a></li>
+      <li><a href="https://www.parse.com/docs/js">Parse JavaScript API Documentation</a></li>
+    </ul>
+
+  </div>
+
+  <script type="text/javascript">
+
+    function updateTime() {
+      var currentTime = new Date();
+      var hours = ("0" + currentTime.getHours()).slice(-2);
+      var minutes = ("0" + currentTime.getMinutes()).slice(-2);
+      var seconds = ("0" + currentTime.getSeconds()).slice(-2);
+      var timeString = hours + ":" + minutes + ":" + seconds;
+
+      var timeInputElement = document.getElementById("current-time-input");
+      timeInputElement.setAttribute("value", timeString);
+
+      setTimeout(updateTime, 1000);
+    }
+    updateTime();
+
+    $("#save-button").click(function() {
+      var currentAmount = $("#current-amount-input").val();
+      saveGame(currentAmount);
+    });
+
+    $("#retrieve-button").click(function() {
+      retrieveGame();
+    });
+
+    // Parse business 
+    Parse.initialize("2a5BU9YHqm6hftNbMjJLyEdbbyl2lEWHIDfvlAB7", "F7e8bzairLeL79yo3D0rTkFYikUonwc2eckgwZuf");
+    
+    var SavedGame = Parse.Object.extend("SavedGame");
+
+    function saveGame(currentAmount) {
+      var savedGame = new SavedGame();
+      savedGame.save({amount: currentAmount, time: new Date()}, {
+        success: function(object) {
+          $("#saveSuccess").show().fadeOut(1500);
+        },
+        error: function(model, error) {
+          $("#saveError").show().fadeOut(1500);
+        }
+      });
+    }
+
+    function retrieveGame() {
+      var query = new Parse.Query(SavedGame);
+
+      query.descending("time");
+      query.first({
+        success: function(savedGame) {
+          var gameTime = savedGame.get("time");
+          var hours = ("0" + gameTime.getHours()).slice(-2);
+          var minutes = ("0" + gameTime.getMinutes()).slice(-2);
+          var seconds = ("0" + gameTime.getSeconds()).slice(-2);
+          var timeString = hours + ":" + minutes + ":" + seconds;
+
+          $("#retrievedAmount").text(savedGame.get("amount"));
+          $("#retrievedTime").text(timeString);
+          $("#retrieveSuccess").show();
+        },
+        error: function(error) {
+          $("#retrieveError").show().fadeOut(1500);
+        }
+      });
+    }
+
+  </script>
+</body>
+
+</html>
